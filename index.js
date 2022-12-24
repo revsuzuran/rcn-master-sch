@@ -1,15 +1,33 @@
 require('./library/mongo-init')();
 
+// cek posisi dgn cronjob tiap 30 menit
+const sch = require('node-schedule');
+sch.scheduleJob('30 * * * *', async function(){
+// (async () => {
+    // console.log("cek");
+    const modelRekon = require('./models/rekon');
+    const dataRekon = await modelRekon.find({is_proses : 'pending'});
+    // console.log(dataRekon)
+    if(dataRekon.length > 0) {
+        const limit = 4; // limit 5 proses per proses
+        for(const [pos,row] of dataRekon.entries()) {
+            if(pos == limit) break;
+            await processData(row.id_rekon);
+        }
+    }
+    
+// })()
+})
 
-(async () => {
-    console.log("hehe");
+async function processData(idRekon) {
+    console.log("proses rekon " + idRekon);
     const modelRekon = require('./models/rekon');
     const modelRekonDetail = require('./models/rekon-detail');
     const modelRekonResult = require('./models/rekon-result');
 
-    const dataRekon = await modelRekon.find({id_rekon : 139});
-    const dataRekon1 = await modelRekonDetail.find({id_rekon : 139, tipe : 1}).limit(0);
-    const dataRekon2 = await modelRekonDetail.find({id_rekon : 139, tipe : 2}).limit(0);
+    const dataRekon = await modelRekon.find({id_rekon : idRekon});
+    const dataRekon1 = await modelRekonDetail.find({id_rekon : idRekon, tipe : 1}).limit(0);
+    const dataRekon2 = await modelRekonDetail.find({id_rekon : idRekon, tipe : 2}).limit(0);
 
     await modelRekonResult.deleteMany({ id_rekon: dataRekon[0].id_rekon});
 
@@ -21,8 +39,9 @@ require('./library/mongo-init')();
     const filter = { id_rekon: dataRekon[0].id_rekon };
     const update = { is_proses: "sukses" };
     await modelRekon.findOneAndUpdate(filter, update);
+}
     
-})()
+
 
 async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
     const dataCompareArra = dataRekon[0].kolom_compare;

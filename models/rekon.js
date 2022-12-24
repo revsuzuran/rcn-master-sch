@@ -16,9 +16,7 @@ const DataSchema = new Schema({
     "delimiter": {
       "type": "String"
     },
-    "is_proses": {
-      "type": "String"
-    }
+    "is_proses": "String"
   }, {timestamps: true});
 
 const DataModel = mongoose.model('rekon_buff', DataSchema, 'rekon_buff');
