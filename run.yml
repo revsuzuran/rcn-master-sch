@@ -1,0 +1,9 @@
+apps:
+  - script : index.js
+    name : "rcn-master-sch"
+    watch : true
+    instance : 1
+    exec_mode : cluster
+    instance_ver : "INSTANCE_ID"
+    env :
+      NODE_ENV : production
