@@ -2,7 +2,7 @@ require('./library/mongo-init')();
 
 // cek posisi dgn cronjob tiap 30 menit
 const sch = require('node-schedule');
-sch.scheduleJob('30 * * * *', async function(){
+sch.scheduleJob('*/1 * * * *', async function(){
 // (async () => {
     console.log("Cron Job Running...");
     const modelRekon = require('./models/rekon');
@@ -12,6 +12,12 @@ sch.scheduleJob('30 * * * *', async function(){
         const limit = 4; // limit 5 proses per proses
         for(const [pos,row] of dataRekon.entries()) {
             if(pos == limit) break;
+
+            // update rekon sedang di proses
+            const filter = { id_rekon: row.id_rekon };
+            const update = { is_proses: "proses" };
+            await modelRekon.findOneAndUpdate(filter, update);
+
             await processData(row.id_rekon);
         }
     }
