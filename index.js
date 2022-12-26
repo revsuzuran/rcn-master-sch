@@ -4,7 +4,7 @@ require('./library/mongo-init')();
 const sch = require('node-schedule');
 sch.scheduleJob('30 * * * *', async function(){
 // (async () => {
-    // console.log("cek");
+    console.log("Cron Job Running...");
     const modelRekon = require('./models/rekon');
     const dataRekon = await modelRekon.find({is_proses : 'pending'});
     // console.log(dataRekon)
@@ -230,7 +230,7 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
     }
 
     const modelRekonResult = require('./models/rekon-result');
-    console.log(dataRekonResult)
+    // console.log(dataRekonResult)
     const data_insert = new modelRekonResult(dataRekonResult);
     await data_insert.save();
 
