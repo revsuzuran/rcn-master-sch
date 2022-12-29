@@ -13,6 +13,9 @@ const DataSchema = new Schema({
     "timestamp": {
       "type": "String"
     },
+    "timestamp_complete": {
+      "type": "String"
+    },
     "delimiter": {
       "type": "String"
     },

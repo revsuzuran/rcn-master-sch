@@ -44,7 +44,7 @@ async function processData(idRekon) {
     console.timeEnd('time_proses');
 
     const filter = { id_rekon: dataRekon[0].id_rekon };
-    const update = { is_proses: "sukses" };
+    const update = { is_proses: "sukses", timestamp_complete: helper.getDateTimeNow()};
     await modelRekon.findOneAndUpdate(filter, update);
 }
     
@@ -76,15 +76,18 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
                     else isCocok = false;break;
                 } else if(valCompare.rule == "contain") {
                     const containVal = valCompare.rule_value;
-                    if(dataDua.includes(containVal) && dataSatu.includes(containVal)) isCocok = true;
+                    // if(dataDua.includes(containVal) && dataSatu.includes(containVal)) isCocok = true;
+                    if(dataDua.includes(dataSatu)) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "begin") {
                     const beginVal = valCompare.rule_value;
-                    if(dataDua.startsWith(beginVal) && dataSatu.startsWith(beginVal)) isCocok = true;
+                    // if(dataDua.startsWith(beginVal) && dataSatu.startsWith(beginVal)) isCocok = true;
+                    if(dataDua.startsWith(dataSatu)) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "end") {
                     const endVal = valCompare.rule_value;
-                    if(dataDua.endsWith(endVal) && dataSatu.endsWith(endVal)) isCocok = true;
+                    // if(dataDua.endsWith(endVal) && dataSatu.endsWith(endVal)) isCocok = true;
+                    if(dataDua.endsWith(dataSatu)) isCocok = true;
                     else isCocok = false;break;
                 }                
             }
@@ -173,15 +176,18 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
                     else isCocok = false;break;
                 } else if(valCompare.rule == "contain") {
                     const containVal = valCompare.rule_value;
-                    if(dataDua.includes(containVal) && dataSatu.includes(containVal)) isCocok = true;
+                    // if(dataDua.includes(containVal) && dataSatu.includes(containVal)) isCocok = true;
+                    if(dataSatu.includes(dataDua)) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "begin") {
                     const beginVal = valCompare.rule_value;
-                    if(dataDua.startsWith(beginVal) && dataSatu.startsWith(beginVal)) isCocok = true;
+                    // if(dataDua.startsWith(beginVal) && dataSatu.startsWith(beginVal)) isCocok = true;
+                    if(dataSatu.startsWith(dataDua)) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "end") {
                     const endVal = valCompare.rule_value;
-                    if(dataDua.endsWith(endVal) && dataSatu.endsWith(endVal)) isCocok = true;
+                    // if(dataDua.endsWith(endVal) && dataSatu.endsWith(endVal)) isCocok = true;
+                    if(dataSatu.endsWith(dataDua)) isCocok = true;
                     else isCocok = false;break;
                 }              
                 
@@ -237,7 +243,6 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
     }
 
     const modelRekonResult = require('./models/rekon-result');
-    // console.log(dataRekonResult)
     const data_insert = new modelRekonResult(dataRekonResult);
     await data_insert.save();
 
