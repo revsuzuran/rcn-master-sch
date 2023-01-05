@@ -13,7 +13,7 @@ const DataSchema = new Schema({
     },
     "sum_result": [
         {
-            "total" : "Number",
+            "total" : "String",
             "kolom_name" : "String",
             "kolom_index" : "Number"
         }
