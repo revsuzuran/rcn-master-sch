@@ -40,7 +40,7 @@ async function processData(idRekon) {
 
     console.time('time_proses');
     await processDataSatu(dataRekon, dataRekon1, dataRekon2)
-    await processDataDua(dataRekon, dataRekon2, dataRekon1)
+    await processDataDua(dataRekon, dataRekon1, dataRekon2)
     console.timeEnd('time_proses');
 
     const filter = { id_rekon: dataRekon[0].id_rekon };
@@ -61,8 +61,12 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
     for (const [index, value] of dataRekon2.entries()) { 
         dataArray2.push(value.data_row)
     }
-    // console.log(dataArray2)
+    
+    /* to sum data */
+    const dataSumArra = dataRekon[0].kolom_sum;
+
     const unMatch = [];
+    const match = [];
     for (const row1 of dataArray1) {
         let isCocok = false;
         for (const row2 of dataArray2) {
@@ -93,9 +97,32 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
                 }                
             }
             
-            if(isCocok) break;
+            if(isCocok) {
+                /* sum match */
+                for(const [index, rowSum] of dataSumArra.entries()) {
+                    if(rowSum.tipe != 1) continue;
+                    const indexKolom = parseInt(dataSumArra[index].kolom_index);
+                    dataSumArra[index].total_match = (parseInt(dataSumArra[index].total_match) || 0) + parseInt(row1[indexKolom])
+                }
+
+                match.push(
+                    {
+                        tipe : "1",
+                        id_rekon : dataRekon[0].id_rekon,
+                        row_data : row1
+                    })
+
+                break;
+            } 
         }
         if(!isCocok) {
+
+            /* sum unmatch */
+            for(const [index, rowSum] of dataSumArra.entries()) {
+                if(rowSum.tipe != 1) continue;
+                const indexKolom = parseInt(dataSumArra[index].kolom_index);
+                dataSumArra[index].total_unmatch = (parseInt(dataSumArra[index].total_unmatch) || 0) + parseInt(row1[indexKolom])
+            }
             unMatch.push(
                 {
                     tipe : "1",
@@ -106,13 +133,14 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
     }
 
     
-    const dataSumArra = dataRekon[0].kolom_sum;
+    /* sum all and save */
     for (const row1 of dataArray1) {
         for(const [index, rowSum] of dataSumArra.entries()) {
             if(rowSum.tipe != 1) continue;
             const indexKolom = parseInt(dataSumArra[index].kolom_index);
             dataSumArra[index].total = dataSumArra[index].total + parseInt(row1[indexKolom])
-            // console.log(index, dataSumArra[index].total, dataSumArra[index].kolom_index, row1[indexKolom])
+            // console.log(dataSumArra[index].total)
+            // console.log(parseInt(row1[indexKolom]))
         }
     }
 
@@ -149,9 +177,12 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
     const modelRekonUnmatch = require('./models/rekon-unmatch');
     modelRekonUnmatch.insertMany(unMatch);
 
+    const modelRekonMatch = require('./models/rekon-match');
+    modelRekonMatch.insertMany(match);
+
 }
 
-async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
+async function processDataDua(dataRekon, dataRekon1, dataRekon2) {
     console.log("proses data dua")
     const dataCompareArra = dataRekon[0].kolom_compare;
     const dataArray1 = [];
@@ -162,8 +193,12 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
     for (const [index, value] of dataRekon2.entries()) { 
         dataArray2.push(value.data_row)
     }
+
+    /* to sum data */
+    const dataSumArra = dataRekon[0].kolom_sum;
     
     const unMatch = [];
+    const match = [];
     for (const row2 of dataArray2) {
         let isCocok = false;
         for (const row1 of dataArray1) {
@@ -195,26 +230,50 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
                 
             }
             
-            if(isCocok) break;
+            if(isCocok) {
+                /* sum match */
+                for(const [index, rowSum] of dataSumArra.entries()) {
+                    if(rowSum.tipe != 2) continue;
+                    const indexKolom = parseInt(dataSumArra[index].kolom_index);
+                    dataSumArra[index].total_match = (parseInt(dataSumArra[index].total_match) || 0) + parseInt(row2[indexKolom])                
+                }
+
+                match.push(
+                    {
+                        tipe : "2",
+                        id_rekon : dataRekon[0].id_rekon,
+                        row_data : row2
+                    })
+                break;
+            }
         }
         if(!isCocok) {
+
+            /* sum unmatch */
+            for(const [index, rowSum] of dataSumArra.entries()) {
+                if(rowSum.tipe != 2) continue;
+                const indexKolom = parseInt(dataSumArra[index].kolom_index);
+                dataSumArra[index].total_unmatch = (parseInt(dataSumArra[index].total_unmatch) || 0) + parseInt(row2[indexKolom])                
+            }
+            
             unMatch.push(
                 {
                     tipe : "2",
                     id_rekon : dataRekon[0].id_rekon,
-                    row_data : row1
+                    row_data : row2
                 })
         }
     }
 
     
-    const dataSumArra = dataRekon[0].kolom_sum;
-    for (const row1 of dataArray2) {
+    /* sum all and save */
+    for (const row2 of dataArray2) {
         for(const [index, rowSum] of dataSumArra.entries()) {
             if(rowSum.tipe != 2) continue;
             const indexKolom = parseInt(dataSumArra[index].kolom_index);
-            dataSumArra[index].total = dataSumArra[index].total + parseInt(row1[indexKolom])
-            // console.log(index, dataSumArra[index].total, dataSumArra[index].kolom_index, row1[indexKolom])
+            dataSumArra[index].total = dataSumArra[index].total + parseInt(row2[indexKolom])
+
+            
         }
     }
 
@@ -222,14 +281,13 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
     console.log("===DATA 2 ===")
     console.log("TOTAL DATA = " + (dataArray2.length));
     console.log("TOTAL DATA MATCH = " + (dataArray2.length - totalUnmatch));
-    console.log("TOTAL DATA UNMATCH = " +totalUnmatch);
+    console.log("TOTAL DATA UNMATCH = " + totalUnmatch);
 
     const dataSumArraDua = [];
     console.log("=> SUMMERIZE DATA ");
     for(const [index, rowSum] of dataSumArra.entries()) {
         if(rowSum.tipe != 2) continue;
         dataSumArraDua.push(rowSum);
-        // console.log(rowSum.kolom_name +"=> TOTAL : "+rowSum.total);
     }
 
     const dataRekonResult = {
@@ -250,6 +308,9 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
 
     const modelRekonUnmatch = require('./models/rekon-unmatch');
     modelRekonUnmatch.insertMany(unMatch);
+
+    const modelRekonMatch = require('./models/rekon-match');
+    modelRekonMatch.insertMany(match);
     
 }
 

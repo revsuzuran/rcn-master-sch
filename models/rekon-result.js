@@ -14,6 +14,9 @@ const DataSchema = new Schema({
     "sum_result": [
         {
             "total" : "String",
+            "total_match" : "String",
+            "total_unmatch" : "String",
+            "total" : "String",
             "kolom_name" : "String",
             "kolom_index" : "Number"
         }
