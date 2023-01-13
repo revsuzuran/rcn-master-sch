@@ -33,8 +33,8 @@ async function processData(idRekon) {
     const modelRekonResult = require('./models/rekon-result');
 
     const dataRekon = await modelRekon.find({id_rekon : idRekon});
-    const dataRekon1 = await modelRekonDetail.find({id_rekon : idRekon, tipe : 1}).limit(0);
-    const dataRekon2 = await modelRekonDetail.find({id_rekon : idRekon, tipe : 2}).limit(0);
+    const dataRekon1 = await modelRekonDetail.find({id_rekon : idRekon, tipe : '1'}).limit(0);
+    const dataRekon2 = await modelRekonDetail.find({id_rekon : idRekon, tipe : '2'}).limit(0);
 
     await modelRekonResult.deleteMany({ id_rekon: dataRekon[0].id_rekon});
 
@@ -51,6 +51,7 @@ async function processData(idRekon) {
 
 
 async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
+    console.log("proses data satu")
     const dataCompareArra = dataRekon[0].kolom_compare;
     const dataArray1 = [];
     for (const [index, value] of dataRekon1.entries()) { 
@@ -60,16 +61,16 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
     for (const [index, value] of dataRekon2.entries()) { 
         dataArray2.push(value.data_row)
     }
-    
+    // console.log(dataArray2)
     const unMatch = [];
     for (const row1 of dataArray1) {
         let isCocok = false;
         for (const row2 of dataArray2) {
             for (const [indexCompare, valCompare] of dataCompareArra.entries()) { 
                 if(valCompare.tipe != 1) continue;
-                
+                // console.log(valCompare);
                 const dataSatu = row1[valCompare.kolom_index];
-                const dataDua = row2[valCompare.kolom_index];
+                const dataDua = row2[valCompare.to_compare_index];
                 // console.log(valCompare.rule + " - " + dataSatu + "=" +dataDua)
                 if(valCompare.rule == "equal") {
                     if(dataSatu == dataDua) isCocok = true;
@@ -151,6 +152,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
 }
 
 async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
+    console.log("proses data dua")
     const dataCompareArra = dataRekon[0].kolom_compare;
     const dataArray1 = [];
     for (const [index, value] of dataRekon1.entries()) { 
@@ -162,13 +164,13 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
     }
     
     const unMatch = [];
-    for (const row1 of dataArray2) {
+    for (const row2 of dataArray2) {
         let isCocok = false;
-        for (const row2 of dataArray1) {
+        for (const row1 of dataArray1) {
             for (const [indexCompare, valCompare] of dataCompareArra.entries()) { 
                 if(valCompare.tipe != 2) continue;
 
-                const dataSatu = row1[valCompare.kolom_index];
+                const dataSatu = row1[valCompare.to_compare_index];
                 const dataDua = row2[valCompare.kolom_index];
                 // console.log(valCompare.rule + " - " + dataSatu + "=" +dataDua)
                 if(valCompare.rule == "equal") {
@@ -219,7 +221,7 @@ async function processDataDua(dataRekon, dataRekon2, dataRekon1) {
     const totalUnmatch = unMatch.length;
     console.log("===DATA 2 ===")
     console.log("TOTAL DATA = " + (dataArray2.length));
-    console.log("TOTAL DATA MATCH = " + (dataArray1.length - totalUnmatch));
+    console.log("TOTAL DATA MATCH = " + (dataArray2.length - totalUnmatch));
     console.log("TOTAL DATA UNMATCH = " +totalUnmatch);
 
     const dataSumArraDua = [];
