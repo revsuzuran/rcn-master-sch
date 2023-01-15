@@ -3,8 +3,8 @@ const helper = require('./library/helper')
 
 // cek posisi dgn cronjob tiap 30 menit
 const sch = require('node-schedule');
-sch.scheduleJob('*/1 * * * *', async function(){
-// (async () => {
+// sch.scheduleJob('*/1 * * * *', async function(){
+(async () => {
     console.log(`${helper.getDateTimeNow()} Cron Job Running...`);
     const modelRekon = require('./models/rekon');
     const dataRekon = await modelRekon.find({is_proses : 'pending'});
@@ -23,8 +23,8 @@ sch.scheduleJob('*/1 * * * *', async function(){
         }
     }
     
-// })()
-})
+})()
+// })
 
 async function processData(idRekon) {
     console.log(`${helper.getDateTimeNow()} proses rekon ${idRekon}`);
