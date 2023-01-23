@@ -3,12 +3,13 @@ const helper = require('./library/helper')
 
 // cek posisi dgn cronjob tiap 30 menit
 const sch = require('node-schedule');
-// sch.scheduleJob('*/1 * * * *', async function(){
-(async () => {
+sch.scheduleJob('*/1 * * * *', async function(){
+// (async () => {
     console.log(`${helper.getDateTimeNow()} Cron Job Running...`);
     const modelRekon = require('./models/rekon');
-    const dataRekon = await modelRekon.find({is_proses : 'pending'});
-    // console.log(dataRekon)
+
+    /* Proses Rekon Manual */
+    const dataRekon = await modelRekon.find({is_proses : 'pending', 'is_schedule' : 0});
     if(dataRekon.length > 0) {
         const limit = 4; // limit 5 proses per proses
         for(const [pos,row] of dataRekon.entries()) {
@@ -19,28 +20,49 @@ const sch = require('node-schedule');
             const update = { is_proses: "proses" };
             await modelRekon.findOneAndUpdate(filter, update);
 
-            await processData(row.id_rekon);
+            await processData(row.id_rekon, row.id_channel);
         }
     }
-    
-})()
-// })
 
-async function processData(idRekon) {
+    /* Proses Rekon Sch */
+    // const dataRekonSch = await modelRekon.find({'is_schedule' : 1});
+    // if(dataRekonSch.length > 0) {
+    //     for(const [pos,row] of dataRekonSch.entries()) {
+            
+    //         const timeNow = moment().format('HH:mm');
+    //         if(row.detail_schedule.time == timeNow) {
+    //             // update rekon sedang di proses
+    //             const filter = { id_rekon: row.id_rekon };
+    //             const update = { is_proses: "proses" };
+    //             await modelRekon.findOneAndUpdate(filter, update);
+
+    //             if(row.)
+
+    //             await processData(row.id_rekon);
+    //         }           
+    //     }
+    // }
+    
+// })()
+})
+
+async function processData(idRekon, idChannel) {
     console.log(`${helper.getDateTimeNow()} proses rekon ${idRekon}`);
+
     const modelRekon = require('./models/rekon');
     const modelRekonDetail = require('./models/rekon-detail');
-    const modelRekonResult = require('./models/rekon-result');
+    // const modelRekonResult = require('./models/rekon-result');
 
     const dataRekon = await modelRekon.find({id_rekon : idRekon});
     const dataRekon1 = await modelRekonDetail.find({id_rekon : idRekon, tipe : '1'}).limit(0);
     const dataRekon2 = await modelRekonDetail.find({id_rekon : idRekon, tipe : '2'}).limit(0);
 
-    await modelRekonResult.deleteMany({ id_rekon: dataRekon[0].id_rekon});
+    // await modelRekonResult.deleteMany({ id_rekon: dataRekon[0].id_rekon});
+    const idRekonResult = helper.randNum();
 
     console.time('time_proses');
-    await processDataSatu(dataRekon, dataRekon1, dataRekon2)
-    await processDataDua(dataRekon, dataRekon1, dataRekon2)
+    await processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel)
+    await processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel)
     console.timeEnd('time_proses');
 
     const filter = { id_rekon: dataRekon[0].id_rekon };
@@ -50,10 +72,17 @@ async function processData(idRekon) {
     
 
 
-async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
-    console.log("proses data satu")
+async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel) {
+    console.log(`proses data satu [${idRekonResult}]`);
     const dataCompareArra = dataRekon[0].kolom_compare;
+    const dataSumArra = dataRekon[0].kolom_sum;
     const dataArray1 = [];
+    let total_sum = 0;
+    let total_sum_match = 0;
+    let total_sum_unmatch = 0;
+    const unMatch = [];
+    const match = [];
+
     for (const [index, value] of dataRekon1.entries()) { 
         dataArray1.push(value.data_row)
     }
@@ -61,12 +90,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
     for (const [index, value] of dataRekon2.entries()) { 
         dataArray2.push(value.data_row)
     }
-    
-    /* to sum data */
-    const dataSumArra = dataRekon[0].kolom_sum;
 
-    const unMatch = [];
-    const match = [];
     for (const row1 of dataArray1) {
         let isCocok = false;
         for (const row2 of dataArray2) {
@@ -102,13 +126,14 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
                 for(const [index, rowSum] of dataSumArra.entries()) {
                     if(rowSum.tipe != 1) continue;
                     const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                    dataSumArra[index].total_match = (parseInt(dataSumArra[index].total_match) || 0) + parseInt(row1[indexKolom])
+                    total_sum_match = total_sum_match + parseInt(row1[indexKolom])
                 }
 
                 match.push(
                     {
                         tipe : "1",
                         id_rekon : dataRekon[0].id_rekon,
+                        id_rekon_result : idRekonResult,
                         row_data : row1
                     })
 
@@ -121,13 +146,14 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
             for(const [index, rowSum] of dataSumArra.entries()) {
                 if(rowSum.tipe != 1) continue;
                 const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                dataSumArra[index].total_unmatch = (parseInt(dataSumArra[index].total_unmatch) || 0) + parseInt(row1[indexKolom])
+                total_sum_unmatch = total_sum_unmatch + parseInt(row1[indexKolom])
             }
             unMatch.push(
                 {
                     tipe : "1",
                     id_rekon : dataRekon[0].id_rekon,
-                    row_data : row1
+                    id_rekon_result : idRekonResult,
+                    row_data : row1,
                 })
         }
     }
@@ -138,9 +164,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
         for(const [index, rowSum] of dataSumArra.entries()) {
             if(rowSum.tipe != 1) continue;
             const indexKolom = parseInt(dataSumArra[index].kolom_index);
-            dataSumArra[index].total = dataSumArra[index].total + parseInt(row1[indexKolom])
-            // console.log(dataSumArra[index].total)
-            // console.log(parseInt(row1[indexKolom]))
+            total_sum = total_sum + parseInt(row1[indexKolom])
         }
     }
 
@@ -155,24 +179,64 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
     for(const [index, rowSum] of dataSumArra.entries()) {
         if(rowSum.tipe != 1) continue;
         dataSumArraSatu.push(rowSum); 
-        // console.log(rowSum.kolom_name +"=> TOTAL : "+rowSum.total);
     }
+
+    /* Perhitungan Fee */
+    const channel = require('./models/channel');
+    const dataChannel = await channel.find({_id : idChannel});
+
+    const totalMatchData = (dataArray1.length - totalUnmatch);
 
     const dataRekonResult = {
         tipe : 1,
         id_rekon: dataRekon[0].id_rekon,
+        id_rekon_result : idRekonResult,
         nama_rekon: dataRekon[0].nama_rekon,
-        sum_result : dataSumArraSatu,
+        sum_result : {
+            total_sum: total_sum,
+            total_sum_match: total_sum_match,
+            total_sum_unmatch: total_sum_unmatch
+        },
         compare_result : {
             total_data: dataArray1.length,
             total_match: (dataArray1.length - totalUnmatch),
             total_unmatch: totalUnmatch
+        },
+        id_channel : idChannel,
+        fee_detail : {
+            fee1 : {
+                nilai : dataChannel[0].fee1.nilai,
+                total : generateFee(dataChannel[0].fee1, totalMatchData, total_sum_match)
+            },
+            fee2 : {
+                nilai : dataChannel[0].fee2.nilai,
+                total : generateFee(dataChannel[0].fee2, totalMatchData, total_sum_match)
+            },
+            fee3 : {
+                nilai : dataChannel[0].fee3.nilai,
+                total : generateFee(dataChannel[0].fee3, totalMatchData, total_sum_match)
+            },
+            fee4 : {
+                nilai : dataChannel[0].fee4.nilai,
+                total : generateFee(dataChannel[0].fee4, totalMatchData, total_sum_match)
+            },
+            fee5 : {
+                nilai : dataChannel[0].fee5.nilai,
+                total : generateFee(dataChannel[0].fee5, totalMatchData, total_sum_match)
+            },
+            fee_admin : {
+                nilai : dataChannel[0].fee_admin.nilai,
+                total : generateFee(dataChannel[0].fee_admin, totalMatchData, total_sum_match)
+            },
+            fee_company : {
+                nilai : 0,
+                total : 0
+            }
         }        
     }
 
     const modelRekonResult = require('./models/rekon-result');
-    const data_insert = new modelRekonResult(dataRekonResult);
-    await data_insert.save();
+    await modelRekonResult.create(dataRekonResult);
 
     const modelRekonUnmatch = require('./models/rekon-unmatch');
     modelRekonUnmatch.insertMany(unMatch);
@@ -182,10 +246,17 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2) {
 
 }
 
-async function processDataDua(dataRekon, dataRekon1, dataRekon2) {
-    console.log("proses data dua")
+async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel) {
+    console.log(`proses data dua [${idRekonResult}]`);
     const dataCompareArra = dataRekon[0].kolom_compare;
-    const dataArray1 = [];
+    const dataSumArra = dataRekon[0].kolom_sum;
+    const dataArray1 = [];    
+    let total_sum = 0;
+    let total_sum_match = 0;
+    let total_sum_unmatch = 0;
+    const unMatch = [];
+    const match = [];
+
     for (const [index, value] of dataRekon1.entries()) { 
         dataArray1.push(value.data_row)
     }
@@ -193,12 +264,7 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2) {
     for (const [index, value] of dataRekon2.entries()) { 
         dataArray2.push(value.data_row)
     }
-
-    /* to sum data */
-    const dataSumArra = dataRekon[0].kolom_sum;
     
-    const unMatch = [];
-    const match = [];
     for (const row2 of dataArray2) {
         let isCocok = false;
         for (const row1 of dataArray1) {
@@ -235,13 +301,14 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2) {
                 for(const [index, rowSum] of dataSumArra.entries()) {
                     if(rowSum.tipe != 2) continue;
                     const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                    dataSumArra[index].total_match = (parseInt(dataSumArra[index].total_match) || 0) + parseInt(row2[indexKolom])                
+                    total_sum_match = total_sum_match + parseInt(row2[indexKolom])              
                 }
 
                 match.push(
                     {
                         tipe : "2",
                         id_rekon : dataRekon[0].id_rekon,
+                        id_rekon_result : idRekonResult,
                         row_data : row2
                     })
                 break;
@@ -253,13 +320,14 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2) {
             for(const [index, rowSum] of dataSumArra.entries()) {
                 if(rowSum.tipe != 2) continue;
                 const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                dataSumArra[index].total_unmatch = (parseInt(dataSumArra[index].total_unmatch) || 0) + parseInt(row2[indexKolom])                
+                total_sum_unmatch = total_sum_unmatch + parseInt(row2[indexKolom])            
             }
             
             unMatch.push(
                 {
                     tipe : "2",
                     id_rekon : dataRekon[0].id_rekon,
+                    id_rekon_result : idRekonResult,
                     row_data : row2
                 })
         }
@@ -271,9 +339,7 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2) {
         for(const [index, rowSum] of dataSumArra.entries()) {
             if(rowSum.tipe != 2) continue;
             const indexKolom = parseInt(dataSumArra[index].kolom_index);
-            dataSumArra[index].total = dataSumArra[index].total + parseInt(row2[indexKolom])
-
-            
+            total_sum = total_sum + parseInt(row2[indexKolom])            
         }
     }
 
@@ -290,21 +356,62 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2) {
         dataSumArraDua.push(rowSum);
     }
 
+    /* Perhitungan Fee */
+    const channel = require('./models/channel');
+    const dataChannel = await channel.find({_id : idChannel});
+
+    const totalMatchData = (dataArray2.length - totalUnmatch);
+
     const dataRekonResult = {
         tipe : 2,
         id_rekon: dataRekon[0].id_rekon,
+        id_rekon_result : idRekonResult,
         nama_rekon: dataRekon[0].nama_rekon,
-        sum_result : dataSumArraDua,
+        sum_result : {
+            total_sum: total_sum,
+            total_sum_match: total_sum_match,
+            total_sum_unmatch: total_sum_unmatch
+        },
         compare_result : {
             total_data: dataArray2.length,
             total_match: (dataArray2.length - totalUnmatch),
             total_unmatch: totalUnmatch
-        }        
+        },
+        id_channel : idChannel,
+        fee_detail : {
+            fee1 : {
+                nilai : dataChannel[0].fee1.nilai,
+                total : generateFee(dataChannel[0].fee1, totalMatchData, total_sum_match)
+            },
+            fee2 : {
+                nilai : dataChannel[0].fee2.nilai,
+                total : generateFee(dataChannel[0].fee2, totalMatchData, total_sum_match)
+            },
+            fee3 : {
+                nilai : dataChannel[0].fee3.nilai,
+                total : generateFee(dataChannel[0].fee3, totalMatchData, total_sum_match)
+            },
+            fee4 : {
+                nilai : dataChannel[0].fee4.nilai,
+                total : generateFee(dataChannel[0].fee4, totalMatchData, total_sum_match)
+            },
+            fee5 : {
+                nilai : dataChannel[0].fee5.nilai,
+                total : generateFee(dataChannel[0].fee5, totalMatchData, total_sum_match)
+            },
+            fee_admin : {
+                nilai : dataChannel[0].fee_admin.nilai,
+                total : generateFee(dataChannel[0].fee_admin, totalMatchData, total_sum_match)
+            },
+            fee_company : {
+                nilai : 0,
+                total : 0
+            }
+        }     
     }
 
     const modelRekonResult = require('./models/rekon-result');
-    const data_insert = new modelRekonResult(dataRekonResult);
-    await data_insert.save();
+    await modelRekonResult.create(dataRekonResult);
 
     const modelRekonUnmatch = require('./models/rekon-unmatch');
     modelRekonUnmatch.insertMany(unMatch);
@@ -364,7 +471,12 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2) {
 
 
 
-
+function generateFee(dataChannel, totalMatch, totalAmount) {
+    if (dataChannel.is_prosentase === 1) {
+        return (parseInt(dataChannel.nilai) * parseInt(totalAmount)) / 100;
+    } 
+    return parseInt(dataChannel.nilai) * parseInt(totalMatch);
+}
 
 
 

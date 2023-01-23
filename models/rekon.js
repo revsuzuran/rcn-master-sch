@@ -19,7 +19,12 @@ const DataSchema = new Schema({
     "delimiter": {
       "type": "String"
     },
-    "is_proses": "String"
+    "is_proses": "String",
+    "id_channel": "String",
+    "is_schedule": "Number",
+    "detail_schedule" : {
+      "time" : "String"
+    }
   }, {timestamps: true});
 
 const DataModel = mongoose.model('rekon_buff', DataSchema, 'rekon_buff');

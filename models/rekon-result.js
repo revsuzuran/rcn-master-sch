@@ -8,19 +8,24 @@ const DataSchema = new Schema({
     "tipe": {
         "type": "Number"
       },
+    "id_rekon_result": {
+        "type": "Number"
+    },
     "nama_rekon": {
       "type": "String"
     },
-    "sum_result": [
-        {
-            "total" : "String",
-            "total_match" : "String",
-            "total_unmatch" : "String",
-            "total" : "String",
-            "kolom_name" : "String",
-            "kolom_index" : "Number"
-        }
-    ],
+    "sum_result": {
+      "total_sum": {
+        "type": "Number"
+      },
+      "total_sum_match": {
+        "type": "Number"
+      },
+      "total_sum_unmatch": {
+        "type": "Number"
+      }
+    }  
+    ,
     "timestamp": {
       "type": "String"
     },
@@ -34,6 +39,37 @@ const DataSchema = new Schema({
       "total_unmatch": {
         "type": "Number"
       }
+    },
+    "id_channel" : "String",
+    "fee_detail" : {
+      "fee1" : {
+        "nilai" : Number,
+        "total" : Number
+      },
+      "fee2" : {
+        "nilai" : Number,
+        "total" : Number
+      },
+      "fee3" : {
+        "nilai" : Number,
+        "total" : Number
+      },
+      "fee4" : {
+        "nilai" : Number,
+        "total" : Number
+      },
+      "fee5" : {
+        "nilai" : Number,
+        "total" : Number
+      },
+      "fee_company" : {
+        "nilai" : Number,
+        "total" : Number
+      },
+      "fee_admin" : {
+        "nilai" : Number,
+        "total" : Number
+      },
     }
   }, {timestamps: true});
 

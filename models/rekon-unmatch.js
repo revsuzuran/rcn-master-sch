@@ -8,6 +8,9 @@ const DataSchema = new Schema({
   "id_rekon": {
     "type": "Number"
   },
+  "id_rekon_result": {
+    "type": "Number"
+  },
   "row_data": [
       {"type": "String"}
   ]
