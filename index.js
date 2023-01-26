@@ -1,26 +1,26 @@
 require('./library/mongo-init')();
 const helper = require('./library/helper')
+const logging = require('./library/logging-helper')
 
 // cek posisi dgn cronjob tiap 30 menit
 const sch = require('node-schedule');
 sch.scheduleJob('*/1 * * * *', async function(){
 // (async () => {
-    console.log(`${helper.getDateTimeNow()} Cron Job Running...`);
-    const modelRekon = require('./models/rekon');
-
+    
+    console.log(`${helper.getDateTimeNow()} Cron Job Running...`);    
     /* Proses Rekon Manual */
-    const dataRekon = await modelRekon.find({is_proses : 'pending', 'is_schedule' : 0});
+    const modelRekonResult = require('./models/rekon-result');
+    const dataRekon = await modelRekonResult.find({is_proses : 'pending', 'is_schedule' : 0});
     if(dataRekon.length > 0) {
         const limit = 4; // limit 5 proses per proses
         for(const [pos,row] of dataRekon.entries()) {
             if(pos == limit) break;
 
             // update rekon sedang di proses
-            const filter = { id_rekon: row.id_rekon };
+            const filter = { id_rekon: row.id_rekon, id_rekon_result : row.id_rekon_result};
             const update = { is_proses: "proses" };
-            await modelRekon.findOneAndUpdate(filter, update);
-
-            await processData(row.id_rekon, row.id_channel);
+            await modelRekonResult.findOneAndUpdate(filter, update);
+            await processData(row.id_rekon, row.id_channel, row.id_rekon_result);
         }
     }
 
@@ -46,8 +46,8 @@ sch.scheduleJob('*/1 * * * *', async function(){
 // })()
 })
 
-async function processData(idRekon, idChannel) {
-    console.log(`${helper.getDateTimeNow()} proses rekon ${idRekon}`);
+async function processData(idRekon, idChannel, idRekonResult) {
+    logging.info(idRekon, `== PROSES REKON ==`);
 
     const modelRekon = require('./models/rekon');
     const modelRekonDetail = require('./models/rekon-detail');
@@ -58,22 +58,33 @@ async function processData(idRekon, idChannel) {
     const dataRekon2 = await modelRekonDetail.find({id_rekon : idRekon, tipe : '2'}).limit(0);
 
     // await modelRekonResult.deleteMany({ id_rekon: dataRekon[0].id_rekon});
-    const idRekonResult = helper.randNum();
+    // const idRekonResult = modelRekonDetail->;
 
-    console.time('time_proses');
-    await processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel)
-    await processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel)
-    console.timeEnd('time_proses');
+    const dataRekonSatu = await processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel, idRekon)
+    const dataRekonDua = await processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel, idRekon)
 
-    const filter = { id_rekon: dataRekon[0].id_rekon };
-    const update = { is_proses: "sukses", timestamp_complete: helper.getDateTimeNow()};
-    await modelRekon.findOneAndUpdate(filter, update);
+    // update rekon result
+    const filterRekonResult = { id_rekon: dataRekon[0].id_rekon, id_rekon_result : idRekonResult};
+    const updateRekonResult = { 
+        is_proses: "sukses", 
+        timestamp_complete: helper.getDateTimeNow(), 
+        data_result1 : dataRekonSatu,
+        data_result2 : dataRekonDua
+    };
+    const modelRekonResult = require('./models/rekon-result');
+    await modelRekonResult.findOneAndUpdate(filterRekonResult, updateRekonResult);
+
+    logging.info(idRekon, `== DONE PROSES REKON ==`);
+
+    // const filter = { id_rekon: dataRekon[0].id_rekon };
+    // const update = { is_proses: "sukses", timestamp_complete: helper.getDateTimeNow()};
+    // await modelRekon.findOneAndUpdate(filter, update);
 }
     
 
 
-async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel) {
-    console.log(`proses data satu [${idRekonResult}]`);
+async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel, idRekon) {
+    logging.info(idRekon, `PROSES REKON SATU [${idRekonResult}]`);
     const dataCompareArra = dataRekon[0].kolom_compare;
     const dataSumArra = dataRekon[0].kolom_sum;
     const dataArray1 = [];
@@ -169,13 +180,13 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
     }
 
     const totalUnmatch = unMatch.length;
-    console.log("===DATA 1 ===")
-    console.log("TOTAL DATA = " + (dataArray1.length));
-    console.log("TOTAL DATA MATCH = " + (dataArray1.length - totalUnmatch));
-    console.log("TOTAL DATA UNMATCH = " +totalUnmatch);
+    // console.log("===DATA 1 ===")
+    // console.log("TOTAL DATA = " + (dataArray1.length));
+    // console.log("TOTAL DATA MATCH = " + (dataArray1.length - totalUnmatch));
+    // console.log("TOTAL DATA UNMATCH = " +totalUnmatch);
 
     const dataSumArraSatu = [];
-    console.log("=> SUMMERIZE DATA ");
+    // console.log("=> SUMMERIZE DATA ");
     for(const [index, rowSum] of dataSumArra.entries()) {
         if(rowSum.tipe != 1) continue;
         dataSumArraSatu.push(rowSum); 
@@ -235,8 +246,8 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
         }        
     }
 
-    const modelRekonResult = require('./models/rekon-result');
-    await modelRekonResult.create(dataRekonResult);
+    // const modelRekonResult = require('./models/rekon-result');
+    // await modelRekonResult.create(dataRekonResult);
 
     const modelRekonUnmatch = require('./models/rekon-unmatch');
     modelRekonUnmatch.insertMany(unMatch);
@@ -244,10 +255,12 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
     const modelRekonMatch = require('./models/rekon-match');
     modelRekonMatch.insertMany(match);
 
+    return dataRekonResult;
+
 }
 
-async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel) {
-    console.log(`proses data dua [${idRekonResult}]`);
+async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, idChannel, idRekon) {
+    logging.info(idRekon, `PROSES REKON DUA [${idRekonResult}]`);
     const dataCompareArra = dataRekon[0].kolom_compare;
     const dataSumArra = dataRekon[0].kolom_sum;
     const dataArray1 = [];    
@@ -344,13 +357,13 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
     }
 
     const totalUnmatch = unMatch.length;
-    console.log("===DATA 2 ===")
-    console.log("TOTAL DATA = " + (dataArray2.length));
-    console.log("TOTAL DATA MATCH = " + (dataArray2.length - totalUnmatch));
-    console.log("TOTAL DATA UNMATCH = " + totalUnmatch);
+    // console.log("===DATA 2 ===")
+    // console.log("TOTAL DATA = " + (dataArray2.length));
+    // console.log("TOTAL DATA MATCH = " + (dataArray2.length - totalUnmatch));
+    // console.log("TOTAL DATA UNMATCH = " + totalUnmatch);
 
     const dataSumArraDua = [];
-    console.log("=> SUMMERIZE DATA ");
+    // console.log("=> SUMMERIZE DATA ");
     for(const [index, rowSum] of dataSumArra.entries()) {
         if(rowSum.tipe != 2) continue;
         dataSumArraDua.push(rowSum);
@@ -410,64 +423,18 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
         }     
     }
 
-    const modelRekonResult = require('./models/rekon-result');
-    await modelRekonResult.create(dataRekonResult);
+    // const modelRekonResult = require('./models/rekon-result');
+    // await modelRekonResult.create(dataRekonResult);
 
     const modelRekonUnmatch = require('./models/rekon-unmatch');
     modelRekonUnmatch.insertMany(unMatch);
 
     const modelRekonMatch = require('./models/rekon-match');
     modelRekonMatch.insertMany(match);
+
+    return dataRekonResult;
     
 }
-
-// function processData(dataRekon, dataRekon1, dataRekon2) {
-//     const unMatch = [];
-//     const matchIndex = [];
-
-//     const dataCompareArra = dataRekon[0].kolom_compare;
-
-//     for (const [index, value] of dataRekon1.entries()) { 
-//         const dataRow = value.data_row;
-//         let isCocok = false;
-//         for (const [ind2, val2] of dataRekon2.entries()) { 
-//             if(matchIndex.includes(val2.row_index)) continue;
-//             // console.log("index rekon2 => " + ind2);
-//             for (const [indexCompare, valCompare] of dataCompareArra.entries()) { 
-
-//                 if(valCompare.tipe != 1) continue;
-
-//                 const dataDua = val2.data_row[valCompare.kolom_index];
-//                 const dataRekon1 = dataRow[valCompare.kolom_index]
-//                 // console.log("index compare => " + indexCompare);
-//                 if(dataRekon1 == dataDua) {
-//                     // console.log("#" + valCompare.kolom_index + " - " + value.row_index + " cocok dengan " + val2.row_index + " => " + dataRekon1 + "=" + dataDua);
-//                     isCocok = true;
-//                 } else {
-//                     isCocok = false;
-//                     // console.log("#" + valCompare.kolom_index + " - " + value.row_index + " tidak cocok dengan " + val2.row_index + " => " + dataRekon1 + "=" + dataDua);
-//                     break;
-                    
-//                 }
-//             }
-//             if(isCocok) {
-//                 matchIndex.push(val2.row_index)
-//                 break;
-//             } 
-            
-//         }
-//         if(!isCocok) {
-//             unMatch.push(
-//                 {
-//                     index : value.row_index,
-//                     value : value.data_row
-//                 })
-//         }
-//         // console.log(index);
-//     }
-//     // console.log(unMatch.length)
-
-// }
 
 
 
