@@ -216,28 +216,28 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
         id_channel : idChannel,
         fee_detail : {
             fee1 : {
-                nilai : parseInt(dataChannel[0].fee1).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee1), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee1.nilai,
+                total : generateFee(dataChannel[0].fee1, totalMatchData, total_sum_match)
             },
             fee2 : {
-                nilai : parseInt(dataChannel[0].fee2).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee2), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee2.nilai,
+                total : generateFee(dataChannel[0].fee2, totalMatchData, total_sum_match)
             },
             fee3 : {
-                nilai : parseInt(dataChannel[0].fee3).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee3), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee3.nilai,
+                total : generateFee(dataChannel[0].fee3, totalMatchData, total_sum_match)
             },
             fee4 : {
-                nilai : parseInt(dataChannel[0].fee4).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee4), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee4.nilai,
+                total : generateFee(dataChannel[0].fee4, totalMatchData, total_sum_match)
             },
             fee5 : {
-                nilai : parseInt(dataChannel[0].fee5).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee5), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee5.nilai,
+                total : generateFee(dataChannel[0].fee5, totalMatchData, total_sum_match)
             },
             fee_admin : {
-                nilai : parseInt(dataChannel[0].fee_admin).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee_admin), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee_admin.nilai,
+                total : generateFee(dataChannel[0].fee_admin, totalMatchData, total_sum_match)
             },
             fee_company : {
                 nilai : 0,
@@ -393,28 +393,28 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
         id_channel : idChannel,
         fee_detail : {
             fee1 : {
-                nilai : parseInt(dataChannel[0].fee1).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee1), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee1.nilai,
+                total : generateFee(dataChannel[0].fee1, totalMatchData, total_sum_match)
             },
             fee2 : {
-                nilai : parseInt(dataChannel[0].fee2).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee2), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee2.nilai,
+                total : generateFee(dataChannel[0].fee2, totalMatchData, total_sum_match)
             },
             fee3 : {
-                nilai : parseInt(dataChannel[0].fee3).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee3), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee3.nilai,
+                total : generateFee(dataChannel[0].fee3, totalMatchData, total_sum_match)
             },
             fee4 : {
-                nilai : parseInt(dataChannel[0].fee4).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee4), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee4.nilai,
+                total : generateFee(dataChannel[0].fee4, totalMatchData, total_sum_match)
             },
             fee5 : {
-                nilai : parseInt(dataChannel[0].fee5).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee5), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee5.nilai,
+                total : generateFee(dataChannel[0].fee5, totalMatchData, total_sum_match)
             },
             fee_admin : {
-                nilai : parseInt(dataChannel[0].fee_admin).nilai,
-                total : generateFee(parseInt(dataChannel[0].fee_admin), totalMatchData, total_sum_match, dataChannel[0])
+                nilai : dataChannel[0].fee_admin.nilai,
+                total : generateFee(dataChannel[0].fee_admin, totalMatchData, total_sum_match)
             },
             fee_company : {
                 nilai : 0,
@@ -438,11 +438,11 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
 
 
 
-function generateFee(nilai, totalMatch, totalAmount, dataChannel) {
+function generateFee(dataChannel, totalMatch, totalAmount) {
     if (dataChannel.is_prosentase === 1) {
-        return (parseInt(nilai) * parseInt(totalAmount)) / 100;
+        return ((parseInt(dataChannel.nilai) || 0) * parseInt(totalAmount)) / 100;
     } 
-    return parseInt(nilai) * parseInt(totalMatch);
+    return (parseInt(dataChannel.nilai) || 0) * parseInt(totalMatch);
 }
 
 
