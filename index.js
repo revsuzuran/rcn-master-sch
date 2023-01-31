@@ -137,7 +137,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
                 for(const [index, rowSum] of dataSumArra.entries()) {
                     if(rowSum.tipe != 1) continue;
                     const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                    total_sum_match = total_sum_match + parseInt(row1[indexKolom])
+                    total_sum_match = total_sum_match + (parseInt(row1[indexKolom]) || 0)
                 }
 
                 match.push(
@@ -157,7 +157,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
             for(const [index, rowSum] of dataSumArra.entries()) {
                 if(rowSum.tipe != 1) continue;
                 const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                total_sum_unmatch = (parseInt(total_sum_unmatch) || 0) + parseInt(row1[indexKolom])
+                total_sum_unmatch = (parseInt(total_sum_unmatch) || 0) + (parseInt(row1[indexKolom]) || 0)
             }
             unMatch.push(
                 {
@@ -175,7 +175,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
         for(const [index, rowSum] of dataSumArra.entries()) {
             if(rowSum.tipe != 1) continue;
             const indexKolom = parseInt(dataSumArra[index].kolom_index);
-            total_sum = total_sum + parseInt(row1[indexKolom])
+            total_sum = total_sum + (parseInt(row1[indexKolom]) || 0)
         }
     }
 
@@ -314,7 +314,7 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
                 for(const [index, rowSum] of dataSumArra.entries()) {
                     if(rowSum.tipe != 2) continue;
                     const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                    total_sum_match = total_sum_match + parseInt(row2[indexKolom])              
+                    total_sum_match = total_sum_match + (parseInt(row2[indexKolom]) || 0)              
                 }
 
                 match.push(
@@ -333,7 +333,7 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
             for(const [index, rowSum] of dataSumArra.entries()) {
                 if(rowSum.tipe != 2) continue;
                 const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                total_sum_unmatch = (parseInt(total_sum_unmatch) || 0) + parseInt(row2[indexKolom])            
+                total_sum_unmatch = (parseInt(total_sum_unmatch) || 0) + (parseInt(row2[indexKolom]) || 0)           
             }
             
             unMatch.push(
@@ -352,7 +352,7 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
         for(const [index, rowSum] of dataSumArra.entries()) {
             if(rowSum.tipe != 2) continue;
             const indexKolom = parseInt(dataSumArra[index].kolom_index);
-            total_sum = total_sum + parseInt(row2[indexKolom])            
+            total_sum = total_sum + (parseInt(row2[indexKolom]) || 0)            
         }
     }
 
