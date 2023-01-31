@@ -157,7 +157,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
             for(const [index, rowSum] of dataSumArra.entries()) {
                 if(rowSum.tipe != 1) continue;
                 const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                total_sum_unmatch = total_sum_unmatch + parseInt(row1[indexKolom])
+                total_sum_unmatch = (parseInt(total_sum_unmatch) || 0) + parseInt(row1[indexKolom])
             }
             unMatch.push(
                 {
@@ -204,9 +204,9 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
         id_rekon_result : idRekonResult,
         nama_rekon: dataRekon[0].nama_rekon,
         sum_result : {
-            total_sum: total_sum,
+            total_sum: (parseInt(total_sum) || 0),
             total_sum_match: total_sum_match,
-            total_sum_unmatch: total_sum_unmatch
+            total_sum_unmatch: (parseInt(total_sum_unmatch) || 0)
         },
         compare_result : {
             total_data: dataArray1.length,
@@ -333,7 +333,7 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
             for(const [index, rowSum] of dataSumArra.entries()) {
                 if(rowSum.tipe != 2) continue;
                 const indexKolom = parseInt(dataSumArra[index].kolom_index);
-                total_sum_unmatch = total_sum_unmatch + parseInt(row2[indexKolom])            
+                total_sum_unmatch = (parseInt(total_sum_unmatch) || 0) + parseInt(row2[indexKolom])            
             }
             
             unMatch.push(
@@ -381,9 +381,9 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
         id_rekon_result : idRekonResult,
         nama_rekon: dataRekon[0].nama_rekon,
         sum_result : {
-            total_sum: total_sum,
+            total_sum: (parseInt(total_sum) || 0),
             total_sum_match: total_sum_match,
-            total_sum_unmatch: total_sum_unmatch
+            total_sum_unmatch: (parseInt(total_sum_unmatch) || 0)
         },
         compare_result : {
             total_data: dataArray2.length,
