@@ -1,50 +1,32 @@
 require('./library/mongo-init')();
 const helper = require('./library/helper')
 const logging = require('./library/logging-helper')
-
-// cek posisi dgn cronjob tiap 30 menit
 const sch = require('node-schedule');
-sch.scheduleJob('*/1 * * * *', async function(){
-// (async () => {
-    
-    console.log(`${helper.getDateTimeNow()} Cron Job Running...`);    
-    /* Proses Rekon Manual */
-    const modelRekonResult = require('./models/rekon-result');
-    const dataRekon = await modelRekonResult.find({is_proses : 'pending', 'is_schedule' : 0});
-    if(dataRekon.length > 0) {
-        const limit = 4; // limit 5 proses per proses
-        for(const [pos,row] of dataRekon.entries()) {
-            if(pos == limit) break;
+const modelRekonResult = require('./models/rekon-result');
 
-            // update rekon sedang di proses
-            const filter = { id_rekon: row.id_rekon, id_rekon_result : row.id_rekon_result};
-            const update = { is_proses: "proses" };
-            await modelRekonResult.findOneAndUpdate(filter, update);
-            await processData(row.id_rekon, row.id_channel, row.id_rekon_result);
+async function start() {
+    sch.scheduleJob('*/1 * * * *', async function(){
+    // (async () => {
+        
+        console.log(`${helper.getDateTimeNow()} Cron Job Running...`);    
+        /* Proses Rekon  */
+        const dataRekon = await modelRekonResult.find({is_proses : 'pending', 'is_schedule' : 0});
+        if(dataRekon.length > 0) {
+            const limit = 1; // limit 5 proses per proses
+            for(const [pos,row] of dataRekon.entries()) {
+                if(pos == limit) break;
+
+                // update rekon sedang di proses
+                const filter = { id_rekon: row.id_rekon, id_rekon_result : row.id_rekon_result};
+                const update = { is_proses: "proses" };
+                await modelRekonResult.findOneAndUpdate(filter, update);
+                await processData(row.id_rekon, row.id_channel, row.id_rekon_result);
+            }
         }
-    }
-
-    /* Proses Rekon Sch */
-    // const dataRekonSch = await modelRekon.find({'is_schedule' : 1});
-    // if(dataRekonSch.length > 0) {
-    //     for(const [pos,row] of dataRekonSch.entries()) {
-            
-    //         const timeNow = moment().format('HH:mm');
-    //         if(row.detail_schedule.time == timeNow) {
-    //             // update rekon sedang di proses
-    //             const filter = { id_rekon: row.id_rekon };
-    //             const update = { is_proses: "proses" };
-    //             await modelRekon.findOneAndUpdate(filter, update);
-
-    //             if(row.)
-
-    //             await processData(row.id_rekon);
-    //         }           
-    //     }
-    // }
-    
-// })()
-})
+        
+    // })()
+    })
+}
 
 async function processData(idRekon, idChannel, idRekonResult) {
     logging.info(idRekon, `== PROSES REKON ==`);
@@ -446,5 +428,6 @@ function generateFee(dataChannel, totalMatch, totalAmount) {
 }
 
 
-
-
+module.exports = {
+    start
+}
