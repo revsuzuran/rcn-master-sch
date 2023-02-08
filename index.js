@@ -432,7 +432,3 @@ function generateFee(dataChannel, totalMatch, totalAmount) {
     return (parseInt(dataChannel.nilai) || 0) * parseInt(totalMatch);
 }
 
-
-module.exports = {
-    start
-}
