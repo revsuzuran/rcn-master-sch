@@ -81,9 +81,11 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
     for (const [index, value] of dataRekon2.entries()) { 
         dataArray2.push(value.data_row)
     }
+
+    logging.info(idRekon, `TOTAL DATA = ${dataArray1.length}`);
     logging.info(idRekon, `PROGESS COMPARING DATA [${idRekonResult}]`);
-    logging.info(idRekon, `"TOTAL DATA = " + (${dataArray1.length})`);
-    for (const row1 of dataArray1) {
+    for (const [indexRow, row1] of dataArray1) {
+        // process.stdout.write('Processing index ' + indexRow + ' complete... \r');
         let isCocok = false;
         for (const row2 of dataArray2) {
             for (const [indexCompare, valCompare] of dataCompareArra.entries()) { 
@@ -165,8 +167,8 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
     // console.log("TOTAL DATA = " + (dataArray1.length));
     // console.log("TOTAL DATA MATCH = " + (dataArray1.length - totalUnmatch));
     // console.log("TOTAL DATA UNMATCH = " +totalUnmatch);
-    logging.info(idRekon, `"TOTAL DATA MATCH = " + (${dataArray1.length - totalUnmatch})`);
-    logging.info(idRekon, `"TOTAL DATA UNMATCH = " + (${totalUnmatch})`);
+    // logging.info(idRekon, `"TOTAL DATA MATCH = " + (${dataArray1.length - totalUnmatch})`);
+    // logging.info(idRekon, `"TOTAL DATA UNMATCH = " + (${totalUnmatch})`);
 
     const dataSumArraSatu = [];
     // console.log("=> SUMMERIZE DATA ");
@@ -261,8 +263,8 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
         dataArray2.push(value.data_row)
     }
 
+    logging.info(idRekon, `TOTAL DATA = ${dataArray2.length}`);    
     logging.info(idRekon, `PROGESS COMPARING DATA 2 [${idRekonResult}]`);
-    logging.info(idRekon, `"TOTAL DATA = " + (${dataArray2.length})`);    
     for (const row2 of dataArray2) {
         let isCocok = false;
         for (const row1 of dataArray1) {
@@ -346,8 +348,8 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
     // console.log("TOTAL DATA = " + (dataArray2.length));
     // console.log("TOTAL DATA MATCH = " + (dataArray2.length - totalUnmatch));
     // console.log("TOTAL DATA UNMATCH = " + totalUnmatch);
-    logging.info(idRekon, `"TOTAL DATA MATCH = " + (${dataArray2.length - totalUnmatch})`);
-    logging.info(idRekon, `"TOTAL DATA UNMATCH = " + (${totalUnmatch})`);
+    // logging.info(idRekon, `"TOTAL DATA MATCH = " + (${dataArray2.length - totalUnmatch})`);
+    // logging.info(idRekon, `"TOTAL DATA UNMATCH = " + (${totalUnmatch})`);
 
     const dataSumArraDua = [];
     // console.log("=> SUMMERIZE DATA ");
