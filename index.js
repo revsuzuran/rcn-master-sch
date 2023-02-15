@@ -4,25 +4,27 @@ const logging = require('./library/logging-helper')
 const sch = require('node-schedule');
 const modelRekonResult = require('./models/rekon-result');
 
+let isProses = false;
+
 sch.scheduleJob('*/1 * * * *', async function(){
 // (async () => {
     
     console.log(`${helper.getDateTimeNow()} Cron Job Running...`);    
     /* Proses Rekon  */
-    const dataRekon = await modelRekonResult.find({is_proses : 'pending', 'is_schedule' : 0});
-    if(dataRekon.length > 0) {
-        const limit = 1; // limit 5 proses per proses
-        for(const [pos,row] of dataRekon.entries()) {
-            if(pos == limit) break;
-
+    const dataRekon = await modelRekonResult.findOne({is_proses : 'pending', 'is_schedule' : 0});
+    
+    if(dataRekon !== null) {
+        if(!isProses){
             // update rekon sedang di proses
-            const filter = { id_rekon: row.id_rekon, id_rekon_result : row.id_rekon_result};
+            isProses = true;
+            const filter = { id_rekon: dataRekon.id_rekon, id_rekon_result : dataRekon.id_rekon_result};
             const update = { is_proses: "proses" };
             await modelRekonResult.findOneAndUpdate(filter, update);
-            await processData(row.id_rekon, row.id_channel, row.id_rekon_result);
+            await processData(dataRekon.id_rekon, dataRekon.id_channel, dataRekon.id_rekon_result);
         }
+    } else {
+        logging.info("", `no rekon pending found`);
     }
-    
 // })()
 });
 
@@ -55,6 +57,7 @@ async function processData(idRekon, idChannel, idRekonResult) {
     await modelRekonResult.findOneAndUpdate(filterRekonResult, updateRekonResult);
 
     logging.info(idRekon, `== DONE PROSES REKON ==`);
+    isProses = false;
 
     // const filter = { id_rekon: dataRekon[0].id_rekon };
     // const update = { is_proses: "sukses", timestamp_complete: helper.getDateTimeNow()};
