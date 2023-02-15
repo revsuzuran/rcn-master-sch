@@ -1,7 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-module.exports = () => {
+module.exports = async () => {
 
 const dbHost = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME;
@@ -13,7 +13,7 @@ const additionalQuery = process.env.ADD_QUERY;
 const uri = "mongodb://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + additionalQuery;
 // const uri = "mongodb://localhost:27017/rekondb";
 
-  mongoose
+  await mongoose
     .connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
