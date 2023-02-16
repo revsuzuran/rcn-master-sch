@@ -87,7 +87,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
 
     logging.info(idRekon, `TOTAL DATA = ${dataArray1.length}`);
     logging.info(idRekon, `PROGESS COMPARING DATA [${idRekonResult}]`);
-    for (const [indexRow, row1] of dataArray1) {
+    for (const row1 of dataArray1) {
         // process.stdout.write('Processing index ' + indexRow + ' complete... \r');
         let isCocok = false;
         for (const row2 of dataArray2) {
