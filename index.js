@@ -90,7 +90,7 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
     for (const row1 of dataArray1) {
         // process.stdout.write('Processing index ' + indexRow + ' complete... \r');
         let isCocok = false;
-        for (const row2 of dataArray2) {
+        for (const [indexRow2, row2] of dataArray2.entries()) {
             for (const [indexCompare, valCompare] of dataCompareArra.entries()) { 
                 if(valCompare.tipe != 1) continue;
                 // console.log(valCompare);
@@ -119,6 +119,9 @@ async function processDataSatu(dataRekon, dataRekon1, dataRekon2, idRekonResult,
             }
             
             if(isCocok) {
+                /* Remove from array to prevent doubles */
+                dataArray2.splice(indexRow2, 1);
+
                 /* sum match */
                 for(const [index, rowSum] of dataSumArra.entries()) {
                     if(rowSum.tipe != 1) continue;
@@ -270,7 +273,7 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
     logging.info(idRekon, `PROGESS COMPARING DATA 2 [${idRekonResult}]`);
     for (const row2 of dataArray2) {
         let isCocok = false;
-        for (const row1 of dataArray1) {
+        for (const [indexRow1,row1] of dataArray1.entries()) {
             for (const [indexCompare, valCompare] of dataCompareArra.entries()) { 
                 if(valCompare.tipe != 2) continue;
 
@@ -300,6 +303,9 @@ async function processDataDua(dataRekon, dataRekon1, dataRekon2, idRekonResult, 
             }
             
             if(isCocok) {
+                /* Remove from array to prevent doubles */
+                dataArray1.splice(indexRow1, 1);
+
                 /* sum match */
                 for(const [index, rowSum] of dataSumArra.entries()) {
                     if(rowSum.tipe != 2) continue;
