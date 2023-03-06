@@ -9,7 +9,7 @@ let isProses = false;
 sch.scheduleJob('*/1 * * * *', async function(){
 // (async () => {
     
-    console.log(`${helper.getDateTimeNow()} Cron Job Running...`);    
+    console.log(`${helper.getDateTimeNow()} Cron Job v1.1 Running...`);    
     /* Proses Rekon  */
     const dataRekon = await modelRekonResult.findOne({is_proses : 'pending', 'is_schedule' : 0});
     
