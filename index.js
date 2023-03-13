@@ -1,17 +1,22 @@
 require('./library/mongo-init')();
+require('dotenv').config();
+const CryptoJS = require("crypto-js");
+const Encryption = require('./library/encryption');
+const moment = require('moment-timezone');
 const helper = require('./library/helper')
 const logging = require('./library/logging-helper')
 const sch = require('node-schedule');
 const modelRekonResult = require('./models/rekon-result');
+const modelRekon = require('./models/rekon');
+const sender = require('./controller/sender');
 
 let isProses = false;
 
-sch.scheduleJob('*/1 * * * *', async function(){
-// (async () => {
-    
+sch.scheduleJob('*/1 * * * *', async function(){    
     console.log(`${helper.getDateTimeNow()} Cron Job v1.1 Running...`);    
-    /* Proses Rekon  */
-    const dataRekon = await modelRekonResult.findOne({is_proses : 'pending', 'is_schedule' : 0});
+
+    /* Proses Rekon Manual */
+    let dataRekon = await modelRekonResult.findOne({is_proses : 'pending', 'is_schedule' : 0});
     
     if(dataRekon !== null) {
         if(!isProses){
@@ -25,7 +30,37 @@ sch.scheduleJob('*/1 * * * *', async function(){
     } else {
         logging.info("", `no rekon pending found`);
     }
-// })()
+
+
+    /* Proses Rekon Schedule/Otomatis */
+    const dataRekonSch = await modelRekon.find({'is_schedule' : 1});
+    if(dataRekonSch !== null) {
+        for (const rowData of dataRekonSch) {
+
+            const timeNow = moment().format('HH:mm');
+            // console.log(timeNow);
+            // console.log(rowData.detail_schedule.waktu_rekon);
+            if(rowData.detail_schedule.waktu_rekon == timeNow) {
+                console.log('hehe');
+            }
+                logging.info("", `Rekon Schedule Found!`);
+                const key = process.env.ECRYPTION_KEY;
+                const libEncrypt = new Encryption();
+                const encryptedData = libEncrypt.encrypt(JSON.stringify({"id_rekon" : rowData.id_rekon}), key);
+                const prosesData = await sender.sendPost({'encryptedData' : encryptedData});                         
+                if(prosesData.response_code == "00") {
+                    dataRekon = prosesData.response_data;   
+                    const filter = { id_rekon: dataRekon.id_rekon, id_rekon_result : dataRekon.id_rekon_result};
+                    const update = { is_proses: "proses" };
+                    await modelRekonResult.findOneAndUpdate(filter, update);
+                    await processData(dataRekon.id_rekon, dataRekon.id_channel, dataRekon.id_rekon_result);
+                }
+                
+            // }
+
+        }
+        
+    }
 });
 
 async function processData(idRekon, idChannel, idRekonResult) {

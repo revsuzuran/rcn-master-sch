@@ -23,7 +23,21 @@ const DataSchema = new Schema({
     "id_channel": "String",
     "is_schedule": "Number",
     "detail_schedule" : {
-      "time" : "String"
+      "nama_rekon" : "String",
+        "opt_channel" : "String",
+        "waktu_rekon" : "String",
+        "data_satu" : {
+            "tipe" : "String",
+            "koneksi" : "String",
+            "input" : "String",
+            "setting" : "String",
+        }, 
+        "data_dua" : {
+            "tipe" : "String",
+            "koneksi" : "String",
+            "input" : "String",
+            "setting" : "String"
+        }
     }
   }, {timestamps: true});
 
