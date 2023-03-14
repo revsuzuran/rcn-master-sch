@@ -16,7 +16,7 @@ sch.scheduleJob('*/1 * * * *', async function(){
     console.log(`${helper.getDateTimeNow()} Cron Job v1.1 Running...`);    
 
     /* Proses Rekon Manual */
-    let dataRekon = await modelRekonResult.findOne({is_proses : 'pending', 'is_schedule' : 0});
+    let dataRekon = await modelRekonResult.findOne({is_proses : 'pending'});
     
     if(dataRekon !== null) {
         if(!isProses){
@@ -38,16 +38,14 @@ sch.scheduleJob('*/1 * * * *', async function(){
         for (const rowData of dataRekonSch) {
 
             const timeNow = moment().format('HH:mm');
-            // console.log(timeNow);
-            // console.log(rowData.detail_schedule.waktu_rekon);
             if(rowData.detail_schedule.waktu_rekon == timeNow) {
-                console.log('hehe');
-            }
                 logging.info("", `Rekon Schedule Found!`);
                 const key = process.env.ECRYPTION_KEY;
                 const libEncrypt = new Encryption();
                 const encryptedData = libEncrypt.encrypt(JSON.stringify({"id_rekon" : rowData.id_rekon}), key);
-                const prosesData = await sender.sendPost({'encryptedData' : encryptedData});                         
+                // console.log(encryptedData);  
+                const prosesData = await sender.sendPost({'encryptedData' : encryptedData});  
+                               
                 if(prosesData.response_code == "00") {
                     dataRekon = prosesData.response_data;   
                     const filter = { id_rekon: dataRekon.id_rekon, id_rekon_result : dataRekon.id_rekon_result};
@@ -55,6 +53,8 @@ sch.scheduleJob('*/1 * * * *', async function(){
                     await modelRekonResult.findOneAndUpdate(filter, update);
                     await processData(dataRekon.id_rekon, dataRekon.id_channel, dataRekon.id_rekon_result);
                 }
+            }
+                
                 
             // }
 
