@@ -103,6 +103,8 @@ const DataSchema = new Schema({
     "time" : "String"
   },
   "id_rekon_result" : Number,
+  "is_rekon_transaksi" : Number,
+  "id_collection" : "String",
   "data_result1" : dataDetail,
   "data_result2" : dataDetail
 }, {timestamps: true});

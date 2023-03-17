@@ -13,7 +13,10 @@ const DataSchema = new Schema({
   },
   "row_data": [
       {"type": "String"}
-  ]
+  ],
+  "id_collection": 'String',
+  "id_transaksi": Number,
+  "id_transaksi_detail": "String"
 }, {timestamps: true});
 
 const DataModel = mongoose.model('rekon_match', DataSchema, 'rekon_match');
