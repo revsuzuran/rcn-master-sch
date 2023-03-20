@@ -19,6 +19,7 @@ sch.scheduleJob('*/1 * * * *', async function(){
 
     /* Proses Rekon Manual */
     let dataRekon = await modelRekonResult.findOne({is_proses : "pending"});
+    // let dataRekon = await modelRekonResult.findOne({id_rekon : 496});
     
     if(dataRekon !== null) {
         if(!isProses){
@@ -52,7 +53,7 @@ sch.scheduleJob('*/1 * * * *', async function(){
                 const key = process.env.ECRYPTION_KEY;
                 const libEncrypt = new Encryption();
                 const encryptedData = libEncrypt.encrypt(JSON.stringify({"id_rekon" : rowData.id_rekon}), key);
-                // console.log(encryptedData);  
+                
                 const prosesData = await sender.sendPost({'encryptedData' : encryptedData});  
                                
                 if(prosesData.response_code == "00") {
@@ -78,16 +79,12 @@ async function processDataTransaksi(idRekon, idChannel, idRekonResult, idCollect
     const modelRekon = require('./models/rekon');
     const modelRekonDetail = require('./models/rekon-detail');
     const modelTransaksiBuff = require('./models/transaksi-buff');
-    // const modelRekonResult = require('./models/rekon-result');
-    // console.log(idCollection);
+    
     const dataRekonTransaksi = await modelTransaksiBuff.findOne({id_collection : idCollection});
     const dataRekon = await modelRekon.find({id_rekon : idRekon});
 
     const dataTransaksi = await modelTransaksiDetail.find({id_collection : idCollection}).limit(0);
     const dataRekon2 = await modelRekonDetail.find({id_rekon : idRekon, tipe : '2'}).limit(0);
-
-    // await modelRekonResult.deleteMany({ id_rekon: dataRekon[0].id_rekon});
-    // const idRekonResult = modelRekonDetail->;
 
     const dataRekonSatu = await processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTransaksi, dataRekon2, idRekonResult, idChannel, idRekon);
     const dataRekonDua = await processDataTransaksiDua(dataRekon, dataRekonTransaksi, dataTransaksi, dataRekon2, idRekonResult, idChannel, idRekon);
@@ -106,9 +103,6 @@ async function processDataTransaksi(idRekon, idChannel, idRekonResult, idCollect
     logging.info(idRekon, `== DONE PROSES REKON TRANSAKSI==`);
     isProses = false;
 
-    // const filter = { id_rekon: dataRekon[0].id_rekon };
-    // const update = { is_proses: "sukses", timestamp_complete: helper.getDateTimeNow()};
-    // await modelRekon.findOneAndUpdate(filter, update);
 }
 
 async function processData(idRekon, idChannel, idRekonResult) {
@@ -520,18 +514,14 @@ async function processDataTransaksiDua(dataRekon, dataRekonTransaksi, dataTransa
     logging.info(idRekon, `PROSES REKON TRANSAKSI [${idRekonResult}]`);
     const dataCompareArra = dataRekon[0].kolom_compare;
     const dataSumArra = dataRekon[0].kolom_sum;
-    // const dataSumArraTransaksi = dataRekonTransaksi[0].kolom_sum;
+    
     const dataArray1 = dataTransaksi;    
     let total_sum = 0;
     let total_sum_match = 0;
     let total_sum_unmatch = 0;
-    // let total_sum_transaksi = 0;
-    // let total_sum_match_transaksi = 0;
-    // let total_sum_unmatch_transaksi = 0;
+    
     const unMatch = [];
     const match = [];
-    // const unMatchTransaksi = [];
-    // const matchTransaksi = [];
 
     const dataArray2 = [];
     for (const [index, value] of dataRekon2.entries()) { 
@@ -544,10 +534,7 @@ async function processDataTransaksiDua(dataRekon, dataRekonTransaksi, dataTransa
     for (const row2 of dataArray2) {
         let isCocok = false;
         for (const [indexRow1,row1] of dataArray1.entries()) {
-            for (const [indexCompare, valCompare] of dataCompareArra.entries()) { 
-                // if(valCompare.tipe != 2){
-                //     continue;
-                // }
+            for (const [indexCompare, valCompare] of dataCompareArra.entries()) {
 
                 /* skip jika ada yg found */
                 if(row1.is_found == false) {
@@ -562,43 +549,30 @@ async function processDataTransaksiDua(dataRekon, dataRekonTransaksi, dataTransa
                     else isCocok = false;break;
                 } else if(valCompare.rule == "contain") {
                     const containVal = valCompare.rule_value;
-                    // if(dataDua.includes(containVal) && dataSatu.includes(containVal)) isCocok = true;
                     if(dataTransaksi.includes(dataDua)) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "begin") {
                     const beginVal = valCompare.rule_value;
-                    // if(dataDua.startsWith(beginVal) && dataSatu.startsWith(beginVal)) isCocok = true;
                     if(dataTransaksi.startsWith(dataDua)) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "end") {
                     const endVal = valCompare.rule_value;
-                    // if(dataDua.endsWith(endVal) && dataSatu.endsWith(endVal)) isCocok = true;
                     if(dataTransaksi.endsWith(dataDua)) isCocok = true;
                     else isCocok = false;break;
                 }              
                 
             }
             
-            if(isCocok) {
-                /* FLAG IS FOUND */
-                // const filterRekonResult = { _id : row1._id};
-                // const updateRekonResult = { 
-                //     is_found: true,
-                //     id_rekon_result: idRekonResult,
-                // };
-                // await modelTransaksiDetail.findOneAndUpdate(filterRekonResult, updateRekonResult);                
+            if(isCocok) {                
+                
+                /* Remove from array to prevent doubles */
+                dataArray1.splice(indexRow1, 1);
 
                 /* sum match */
                 for(const [index, rowSum] of dataSumArra.entries()) {
                     const indexKolom = parseInt(dataSumArra[index].kolom_index);
                     total_sum_match = total_sum_match + (parseInt(row2[indexKolom]) || 0)              
                 }
-
-                // /* sum match transaksi*/
-                // for(const [index, rowSum] of dataSumArraTransaksi.entries()) {
-                //     const indexKolom = parseInt(dataSumArraTransaksi[index].kolom_index);
-                //     total_sum_match_transaksi = total_sum_match_transaksi + (parseInt(row1.data_row[indexKolom]) || 0)              
-                // }
 
                 match.push(
                     {
@@ -607,16 +581,6 @@ async function processDataTransaksiDua(dataRekon, dataRekonTransaksi, dataTransa
                         id_rekon_result : idRekonResult,
                         row_data : row2,
                     });
-                // matchTransaksi.push(
-                //     {
-                //         tipe : "1",
-                //         id_rekon : idRekon,
-                //         id_rekon_result : idRekonResult,
-                //         row_data : row1.data_row,
-                //         id_collection : row1.id_collection,
-                //         id_transaksi : row1.id_transaksi,
-                //         id_transaksi_detail : row1._id,
-                //     })
 
                 /* Remove from array to prevent doubles */
                 dataArray1.splice(indexRow1, 1);
@@ -653,7 +617,7 @@ async function processDataTransaksiDua(dataRekon, dataRekonTransaksi, dataTransa
 
     const totalUnmatch = unMatch.length;
     const dataSumArraDua = [];
-    // console.log("=> SUMMERIZE DATA ");
+    
     for(const [index, rowSum] of dataSumArra.entries()) {
         if(rowSum.tipe != 2) continue;
         dataSumArraDua.push(rowSum);
@@ -725,7 +689,6 @@ async function processDataTransaksiDua(dataRekon, dataRekonTransaksi, dataTransa
 
 async function processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTransaksi, dataRekon2, idRekonResult, idChannel, idRekon) {
     logging.info(idRekon, `PROSES REKON SATU [${idRekonResult}]`);
-    // console.log(dataRekonTransaksi);
     const dataCompareArra = dataRekonTransaksi.kolom_compare;
     const dataSumArra = dataRekonTransaksi.kolom_sum;
     const dataArray1 = dataTransaksi;
@@ -734,11 +697,7 @@ async function processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTrans
     let total_sum_unmatch = 0;
     const unMatch = [];
     const match = [];
-    // console.log(dataRekonTransaksi);
-    // console.log(dataSumArra);
-    // for (const [index, value] of dataTransaksi.entries()) { 
-    //     dataArray1.push(value.data_row)
-    // }
+    
     const dataArray2 = [];
     for (const [index, value] of dataRekon2.entries()) { 
         dataArray2.push(value.data_row)
@@ -747,33 +706,27 @@ async function processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTrans
     logging.info(idRekon, `TOTAL DATA = ${dataArray1.length}`);
     logging.info(idRekon, `PROGESS COMPARING DATA [${idRekonResult}]`);
     for (const row1 of dataArray1) {
-        // process.stdout.write('Processing index ' + indexRow + ' complete... \r');
-        // console.log(row1.data_row);
+        
         let isCocok = false;
         for (const [indexRow2, row2] of dataArray2.entries()) {
             // console.log(row2);
             for (const [indexCompare, valCompare] of dataCompareArra.entries()) { 
-                // if(valCompare.tipe != 1) continue;
-                // console.log(valCompare);
                 const dataSatu = row1.data_row[valCompare.kolom_index];
                 const dataDua = row2[valCompare.to_compare_index];
-                // console.log(valCompare.rule + " - " + dataSatu + "=" +dataDua)
+                
                 if(valCompare.rule == "equal") {
                     if(dataSatu == dataDua) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "contain") {
                     const containVal = valCompare.rule_value;
-                    // if(dataDua.includes(containVal) && dataSatu.includes(containVal)) isCocok = true;
                     if(dataDua.includes(dataSatu)) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "begin") {
                     const beginVal = valCompare.rule_value;
-                    // if(dataDua.startsWith(beginVal) && dataSatu.startsWith(beginVal)) isCocok = true;
                     if(dataDua.startsWith(dataSatu)) isCocok = true;
                     else isCocok = false;break;
                 } else if(valCompare.rule == "end") {
                     const endVal = valCompare.rule_value;
-                    // if(dataDua.endsWith(endVal) && dataSatu.endsWith(endVal)) isCocok = true;
                     if(dataDua.endsWith(dataSatu)) isCocok = true;
                     else isCocok = false;break;
                 }                
@@ -793,7 +746,6 @@ async function processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTrans
 
                 /* sum match */
                 for(const [index, rowSum] of dataSumArra.entries()) {
-                    if(rowSum.tipe != 1) continue;
                     const indexKolom = parseInt(dataSumArra[index].kolom_index);
                     total_sum_match = total_sum_match + (parseInt(row1.data_row[indexKolom]) || 0)
                 }
@@ -816,7 +768,6 @@ async function processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTrans
 
             /* sum unmatch */
             for(const [index, rowSum] of dataSumArra.entries()) {
-                if(rowSum.tipe != 1) continue;
                 const indexKolom = parseInt(dataSumArra[index].kolom_index);
                 total_sum_unmatch = (parseInt(total_sum_unmatch) || 0) + (parseInt(row1.data_row[indexKolom]) || 0)
             }
@@ -837,7 +788,6 @@ async function processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTrans
     /* sum all and save */
     for (const row1 of dataArray1) {
         for(const [index, rowSum] of dataSumArra.entries()) {
-            if(rowSum.tipe != 1) continue;
             const indexKolom = parseInt(dataSumArra[index].kolom_index);
             total_sum = total_sum + (parseInt(row1.data_row[indexKolom]) || 0)
         }
@@ -846,9 +796,7 @@ async function processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTrans
     const totalUnmatch = unMatch.length;
 
     const dataSumArraSatu = [];
-    // console.log("=> SUMMERIZE DATA ");
     for(const [index, rowSum] of dataSumArra.entries()) {
-        if(rowSum.tipe != 1) continue;
         dataSumArraSatu.push(rowSum); 
     }
 
@@ -906,15 +854,12 @@ async function processDataTransaksiSatu(dataRekon, dataRekonTransaksi, dataTrans
         }        
     }
 
-    // const modelRekonResult = require('./models/rekon-result');
-    // await modelRekonResult.create(dataRekonResult);
-
     const modelRekonUnmatch = require('./models/rekon-unmatch');
     modelRekonUnmatch.insertMany(unMatch);
 
     const modelRekonMatch = require('./models/rekon-match');
     modelRekonMatch.insertMany(match);
-    // console.log(match);
+    
     return dataRekonResult;
 
 }
